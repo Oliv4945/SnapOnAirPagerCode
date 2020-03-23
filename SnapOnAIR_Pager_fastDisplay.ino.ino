@@ -71,6 +71,9 @@ int dimOn=1;
 uint64_t chipid;  
 String IDnumber;
 
+// MsgReceived
+int iReceivedCount;
+
 
 const uint8_t ucBitmap[] PROGMEM = {
   0x42,0x4d,0x82,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x82,0x00,0x00,0x00,0x6c,0x00,
@@ -158,6 +161,14 @@ void lighton(){ // power the backlinght LED OFF
   digitalWrite(LED_PIN, HIGH);  
   };
 
+String writefield()
+{ // this function opens e txtfied and let the user add chat with buttons, but1 = backspace/delete , but 2 = validate, rotclick=
+  // The idea is to clear the display, open a txtfield and display a keyboard wher ea letter will be selected via rotary encoder
+  String composedfield=""; // string to return at the end
+    uc1701Fill(0);
+    uc1701DrawLine(0,0,40,40);
+  
+}
 
 // Sound on off function
 void rotarybeep(int channel, int freq, int dura){
@@ -180,17 +191,14 @@ void menuAbout(){
     uc1701WriteString(0,6,(char *)"Free int'l Txt", 0, FONT_NORMAL);
     uc1701WriteString(0,7,(char *)"MESH/LoRA Netwrk", 0, FONT_NORMAL);
     
-    delay (200);
-
- 
-    
   };
 
 
 
 void menuSettings(String IDnumber){ // Menu du select all settings - Will save in memory when closed
     uc1701Fill(0);
-    uc1701WriteString(0,0,(char *)" ** Settings **", 0, FONT_NORMAL);
+    
+    uc1701WriteString(0,0,(char *)"    Settings   ", 0, FONT_NORMAL);
     uc1701WriteString(0,1,(char *)"SnapID:", 0, FONT_NORMAL);
     uc1701WriteString(65,1,(char *)IDnumber.c_str(), 0, FONT_NORMAL);    
     uc1701WriteString(0,2,(char *)"Name:", 0, FONT_NORMAL);
@@ -199,17 +207,127 @@ void menuSettings(String IDnumber){ // Menu du select all settings - Will save i
     uc1701WriteString(0,5,(char *)"MeSH", 0, FONT_NORMAL);
     uc1701WriteString(0,6,(char *)"Freq:", 0, FONT_NORMAL);
     uc1701WriteString(0,7,(char *)"Misc.", 0, FONT_NORMAL);
+    // Title rectangle
+    uc1701DrawLine(1,0,127-1,0);
+    uc1701DrawLine(1,0,1,6);
+    uc1701DrawLine(1,6,127-1,6);
+    uc1701DrawLine(127-1,0,127-1,6);
+    
   };
 
+
+String menuKeyboard(String mnuTitle, String inputString, int kbCol, int kbRow){ // input sting, kbCol = column, kbRow = row
+  // This menu generates a Q10 Like Keyboard 
+  // Design the first line
+  // Button 1 being the SHIFT
+  // Button 2 being the ALT-GR
+  char *szKeys1 = (char *)"QWERTYUIOP";
+  char *szKeys2 = (char *)"ASDFGHJKL-";
+  char *szKeys3 = (char *)"_ZXCVBNM$r";
+
+  uc1701Fill(0);
+  uc1701WriteString(0,0,(char *)mnuTitle.c_str(), 0, FONT_SMALL); 
+
+
+ // Display the default text
+ uc1701WriteString(0,2,(char *)inputString.c_str(), 0, FONT_NORMAL); 
+
+ // generate the first line of the Keyboard
   
+  for (int i = 0; i <= 10; i++){
+  char szTemp1[2];
+  szTemp1[0] = szKeys1[i];
+  szTemp1[1] = 0;
+
+  if (kbCol == (i+1) && kbRow == 1){
+  uc1701WriteString(15+i*10,4,szTemp1, 0, FONT_SMALL); 
+  } else {
+   uc1701WriteString(15+i*10,4,szTemp1, 0, FONT_NORMAL); 
+     }; 
+  
+  }
+
+ // generate the 2nd line of the Keyboard
+  
+  for (int i = 0; i <= 10; i++){
+  char szTemp2[2];
+  szTemp2[0] = szKeys2[i];
+  szTemp2[1] = 0;
+
+  if (kbCol == (i+1) && kbRow == 2){
+    uc1701WriteString(15+i*10,5,szTemp2, 0, FONT_SMALL);  
+  } else {
+    uc1701WriteString(15+i*10,5,szTemp2, 0, FONT_NORMAL); 
+    };
+  
+  
+  }
+
+// generate the 3rd line of the Keyboard
+  
+  for (int i = 0; i <= 10; i++){
+  char szTemp3[2];
+  szTemp3[0] = szKeys3[i];
+  szTemp3[1] = 0;
+
+  if (kbCol == (i+1) && kbRow == 3){
+  
+   uc1701WriteString(15+i*10,6,szTemp3, 0, FONT_SMALL);  
+   } else {
+    uc1701WriteString(15+i*10,6,szTemp3, 0, FONT_NORMAL);  
+    };
+  
+  }
+
+    /*
+    // Generate Keys Caps
+     for (int j = 0; j <= 8; j++){
+     uc1701DrawLine(23+(10*j),30,23+(10*j),57);
+     };
+
+    // Generate KeyCaps Hztal lines
+    uc1701DrawLine(10,39,115,39);
+    uc1701DrawLine(10,47,115,47);
+    
+     
+    // Keyboard Borders and Keys
+    uc1701DrawLine(10,30,115,30);
+    uc1701DrawLine(10,30,10,57);
+    uc1701DrawLine(115,30,115,57);
+    uc1701DrawLine(10,57,115,57);
+    */
+
+   
+    
+  
+  };
+
+
+void writemenu(){ // This menu is to write a message
+    menuLevel=2; // position of write a message
+    uc1701Fill(0);
+    uc1701WriteString(0,0,(char *)"Write Msg", 0, FONT_NORMAL);
+    uc1701WriteString(0,1,(char *)"D:", 0, FONT_NORMAL);
+    
+    // Msg SelectBox
+    uc1701DrawLine(1,15,127,15);
+    uc1701DrawLine(1,15,1,63);
+    uc1701DrawLine(127,15,127,63);
+    uc1701DrawLine(1,63,127,63);
+
+};  
 
 void mainmenu(int menuPosition){
-
 
   // Concat menu position
   String zeposition = "Position="+String(menuPosition);
   // Display the first menu
   uc1701Fill(0);
+   // Debug
+   uc1701WriteString(0,0,(char *)(String(menuPosition)).c_str(), 0, FONT_SMALL);
+   uc1701WriteString(0,20,(char *)(String(menuLevel)).c_str(), 0, FONT_SMALL);
+   
+  
   if (menuPosition==1) {
     // Selected
     uc1701WriteString(0,1,(char *)mnuhome1.c_str(), 0, FONT_SMALL);
@@ -268,8 +386,6 @@ void mainmenu(int menuPosition){
   
   
   }
- 
-
 
 
 
@@ -292,11 +408,6 @@ void setup() {
    uc1701WriteString(0,4,(char *)"Sent: 367", 0, FONT_NORMAL);
    uc1701WriteString(0,5,(char *)"WIFI+ LORA+ BT+", 0, FONT_NORMAL);
    
-   
-
-  
-   
-   
    pinMode(ROTLEFT,INPUT);
    pinMode(ROTRIGHT,INPUT);
    pinMode(ROTPUSH,INPUT);
@@ -311,6 +422,12 @@ void setup() {
    chipid=ESP.getEfuseMac();
    IDnumber= String((uint32_t)ESP.getEfuseMac(), HEX);
    if (soundOn==1){rotarybeep(0, 100, 10);};
+
+   // Reset menuLevel to 1
+   menuLevel=1;
+   menuPosition = 1;
+
+   delay(1000);
    
 }
 
@@ -326,7 +443,8 @@ void loop() {
     if (menuPosition >= 6) {menuPosition=6;};
 
     // refresh display menuPosition
-    mainmenu(menuPosition);
+    if (menuLevel==1) {mainmenu(menuPosition);};  // root menu
+    if (menuLevel==2) {writemenu();};           // Write message menu
     
   }
   
@@ -339,7 +457,9 @@ void loop() {
     if (menuPosition <= 1) {menuPosition=1;};
 
     // refresh display menuPosition
-    mainmenu(menuPosition);
+        if (menuLevel==1) {mainmenu(menuPosition);};
+        if (menuLevel==2) {writemenu();};           // Write message menu
+ 
     
   }
 
@@ -350,6 +470,17 @@ void loop() {
   if (soundOn==1){rotarybeep(0, 100, 10);};
   
   // Now we check if we go submenus
+
+   if (menuLevel==1) { // If we are at root level 
+
+    // Menu 2
+   if (menuPosition ==2){// We show the Keyboard the write message menu
+    //menuKeyboard("Write Msg","Default string...",5,2); // We load the keyboard with default letter col 5 row 2.
+    menuLevel=2;
+    menuPosition=2;
+    
+    
+    };
 
    // Menu 3
       if (menuPosition ==3){ // We show the setting menu
@@ -376,6 +507,16 @@ void loop() {
    if (menuPosition ==6){// We show the ABOUT menu
     menuAbout();
     };
+
+
+   };
+
+
+if (menuLevel==2) { // If we are at root level 
+  writemenu();
+  
+  
+  }
 
     
   }
