@@ -85,6 +85,8 @@ void setup() {
 }
 
 void loop() {
+  LoRa.handleDio0Rise();
+
  // try to parse packet
   int packetSize = LoRa.parsePacket();
   if (packetSize) {
